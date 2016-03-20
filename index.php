@@ -52,21 +52,12 @@ var currentFocusLabelSel;
 var candidateClassResultAreaSel;
 var youbiList = ["日", "月", "火", "水", "木", "金", "土"];
 
-var classList = [
-	// [day, period, 配当年次, 単位数
-	// 履修登録学期区分(1: 春季, 2: 秋期, 3: 通年),
-	// name, 科目区分],
-	[1, 1, 1, 3, 6, "数学B2(微分積分) 基幹(1)", "数学　必修"],
-	[1, 1, 1, 3, 6, "数学B2(微分積分) 基幹(2)", "数学　必修"],
-	[1, 1, 1, 1, 2, "化学C　基幹　（化学未履修者用クラス）", ""],
-	[1, 1, 1, 1, 2, "基礎の数学　基幹(3)-I", "数学　必修"],
-	[1, 1, 1, 1, 2, "基礎の数学　基幹(3)-II", "数学　必修"],
-	[1, 1, 2, 1, 1, "Concept Building And Discussion 1", "外国語　英語　必修"],
-	[1, 1, 1, 2, 2, "Cプログラミング　基幹(3)", "情報関連科目　選択"],
-	[1, 1, 1, 2, 2, "Cプログラミング　基幹(9)", "情報関連科目　選択"],
-	[1, 1, 1, 2, 5, "数学A2（線形代数）　基幹(4)", "数学　必修"],
-	[1, 1, 2, 2, 1, "Concept Building And Discussion 2", "外国語　英語　必修"],
-];
+<?php
+	$str = file_get_contents("./data/2016_kikan_index.json");
+	print("var periodTable = " . $str . "\n");
+	$str = file_get_contents("./data/2016_kikan.json");
+	print("var classList = " . $str . "\n");
+?>
 
 function moveTTFocus(elem, d, p){
 	focusDay = d;
@@ -79,10 +70,10 @@ function moveTTFocus(elem, d, p){
 	focusElemOldCSS = focusElemSel.css("border");
 	focusElemSel.css("border", "2px solid #ff0000");
 	//
-	showCandidateClassTable(classList, d, p);
+	showCandidateClassTable(d, p);
 }
 
-function showCandidateClassTable(cList, d, p){
+function showCandidateClassTable(d, p){
 	var table = $('<table>')
 		.addClass("table")
 		.addClass("table-bordered");
@@ -94,18 +85,15 @@ function showCandidateClassTable(cList, d, p){
 		.append($('<th>').text("単位数").css("width", "10%"));
 	table.append($('<thead>').append(th));
 	var tbody = $('<tbody>');
-	for(var i = 0; i < cList.length; i++){
-		var c = cList[i];
-		if(c[0] != d || c[1] != p){
-			continue;
-		}
-		console.log(c);
+	var classIDList = periodTable[d][p];
+	for(var i = 0; i < classIDList.length; i++){
+		var c = classList[classIDList[i]];
 		var td = $('<tr>')
-			.append($('<td>').text(c[2]))
+			.append($('<td>').text(c[1]))
 			.append($('<td>').text(c[3]))
+			.append($('<td>').append($('<a>').text(c[4]).attr("href", c[6]).attr("target", "_blank")))
 			.append($('<td>').text(c[5]))
-			.append($('<td>').text(c[6]))
-			.append($('<td>').text(c[4]));
+			.append($('<td>').text(c[2]));
 		tbody.append(td);
 	}
 	table.append(tbody);
