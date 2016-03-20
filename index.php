@@ -1,12 +1,10 @@
 <?php
 
 $youbiList = array("日", "月", "火", "水", "木", "金", "土");
-$data = array();
-$data[1][3] = "てすと";
 
-function showTimeTable($data, $maxPeriod = 6){
+function showTimeTable($maxPeriod = 6){
 	global $youbiList;
-	print "<table class='table table-bordered'>";
+	print "<table id='timeTable' class='table table-bordered'>";
 	print "<thead><tr>";
 	print "<th style='width: 8%;'></th>";
 	for($d = 1; $d < 7; $d++){
@@ -19,9 +17,6 @@ function showTimeTable($data, $maxPeriod = 6){
 		print "<th>{$p}</th>";
 		for($d = 1; $d < 7; $d++){
 			print"<td onclick='moveTTFocus(this, {$d}, {$p});'>";
-			if(isset($data[$d][$p])){		
-				print htmlspecialchars($data[$d][$p]);
-			}
 			print "</td>";
 		}
 		print "</tr>";
@@ -48,6 +43,8 @@ table {
 	<script>
 
 var focusDay = -1, focusPeriod = -1, focusElemSel, focusElemOldCSS;
+var focusListSel, focusListOldCSS;
+var timeTableSel;
 var currentFocusLabelSel;
 var candidateClassResultAreaSel;
 var youbiList = ["日", "月", "火", "水", "木", "金", "土"];
@@ -73,6 +70,21 @@ function moveTTFocus(elem, d, p){
 	showCandidateClassTable(d, p);
 }
 
+function moveCLFocus(elem, code){
+	console.log(code);
+	//
+	if(focusListSel){
+		focusListSel.css("border", focusListOldCSS);
+	}
+	focusListSel = $(elem);
+	focusListOldCSS = focusListSel.css("border");
+	focusListSel.css("border", "2px solid #ff0000");
+	//
+	var c = classList[code];
+	focusElemSel.text(c[4]);
+	localStorage[focusDay + "_" + focusPeriod] = code;
+}
+
 function showCandidateClassTable(d, p){
 	var table = $('<table>')
 		.addClass("table")
@@ -93,19 +105,43 @@ function showCandidateClassTable(d, p){
 			.append($('<td>').text(c[3]))
 			.append($('<td>').append($('<a>').text(c[4]).attr("href", c[6]).attr("target", "_blank")))
 			.append($('<td>').text(c[5]))
-			.append($('<td>').text(c[2]));
+			.append($('<td>').text(c[2]))
+			.attr("onclick", "moveCLFocus(this, '"+classIDList[i]+"')");
 		tbody.append(td);
 	}
 	table.append(tbody);
 	//
-	console.log(table);
-	console.log(candidateClassResultAreaSel);
+	//console.log(table);
+	//console.log(candidateClassResultAreaSel);
 	candidateClassResultAreaSel.empty().append(table);
 } 
+
+function erasePeriod(){
+	focusElemSel.text("");
+	localStorage.removeItem(focusDay + "_" + focusPeriod);
+}
 
 onload = function(){
 	currentFocusLabelSel = $("#currentFocusLabel");
 	candidateClassResultAreaSel = $("#candidateClassResultArea");
+	timeTableSel = $("#timeTable");
+	//
+	var rowList = timeTableSel[0].children[1].children;
+	for(var p = 0; p < rowList.length; p++){
+		var days = rowList[p].children;
+		//console.log(days);
+		for(d = 1; d < days.length; d++){
+			var t = days[d];
+			var code = localStorage[d + "_" + (p + 1)];
+			//console.log(code);
+			if(code){
+				var c = classList[code];
+				if(c){
+					$(t).text(c[4]);
+				}
+			}
+		}
+	}
 }
 
 	</script>
@@ -118,7 +154,8 @@ onload = function(){
 	<div class="container">
 		<h1>WTT</h1>
 		<h2>現在の時間割</h2>
-		<?php showTimeTable($data); ?>
+		<?php showTimeTable(); ?>
+		<button onclick="erasePeriod()"><span class="glyphicon glyphicon-erase"></span></button>
 		<h2>選択可能な授業</h2>
 		<h4 id="currentFocusLabel">編集する時限を上から選択してください</h4>
 		<div id="candidateClassResultArea"></div>
