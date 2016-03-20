@@ -53,19 +53,19 @@ var candidateClassResultAreaSel;
 var youbiList = ["日", "月", "火", "水", "木", "金", "土"];
 
 var classList = [
-	// [day, period, 履修開始学年, 
+	// [day, period, 配当年次, 単位数
 	// 履修登録学期区分(1: 春季, 2: 秋期, 3: 通年),
-	// name, type],
-	[1, 1, 1, 3, "数学B2(微分積分) 基幹(1)", "Unknown"],
-	[1, 1, 1, 3, "数学B2(微分積分) 基幹(2)", "Unknown"],
-	[1, 1, 1, 1, "化学C　基幹　（化学未履修者用クラス）", "Unknown"],
-	[1, 1, 1, 1, "基礎の数学　基幹(3)-I", "Unknown"],
-	[1, 1, 1, 1, "基礎の数学　基幹(3)-II", "Unknown"],
-	[1, 1, 2, 1, "Concept Building And Discussion 1", "Unknown"],
-	[1, 1, 1, 2, "Cプログラミング　基幹(3)", "Unknown"],
-	[1, 1, 1, 2, "Cプログラミング　基幹(9)", "Unknown"],
-	[1, 1, 1, 2, "数学A2（線形代数）　基幹(4)", "Unknown"],
-	[1, 1, 2, 2, "Concept Building And Discussion 2", "Unknown"],
+	// name, 科目区分],
+	[1, 1, 1, 3, 6, "数学B2(微分積分) 基幹(1)", "数学　必修"],
+	[1, 1, 1, 3, 6, "数学B2(微分積分) 基幹(2)", "数学　必修"],
+	[1, 1, 1, 1, 2, "化学C　基幹　（化学未履修者用クラス）", ""],
+	[1, 1, 1, 1, 2, "基礎の数学　基幹(3)-I", "数学　必修"],
+	[1, 1, 1, 1, 2, "基礎の数学　基幹(3)-II", "数学　必修"],
+	[1, 1, 2, 1, 1, "Concept Building And Discussion 1", "外国語　英語　必修"],
+	[1, 1, 1, 2, 2, "Cプログラミング　基幹(3)", "情報関連科目　選択"],
+	[1, 1, 1, 2, 2, "Cプログラミング　基幹(9)", "情報関連科目　選択"],
+	[1, 1, 1, 2, 5, "数学A2（線形代数）　基幹(4)", "数学　必修"],
+	[1, 1, 2, 2, 1, "Concept Building And Discussion 2", "外国語　英語　必修"],
 ];
 
 function moveTTFocus(elem, d, p){
@@ -90,7 +90,8 @@ function showCandidateClassTable(cList, d, p){
 		.append($('<th>').text("学年").css("width", "10%"))
 		.append($('<th>').text("学期").css("width", "10%"))
 		.append($('<th>').text("授業名"))
-		.append($('<th>').text("科目群").css("width", "20%"));
+		.append($('<th>').text("科目群").css("width", "20%"))
+		.append($('<th>').text("単位数").css("width", "10%"));
 	table.append($('<thead>').append(th));
 	var tbody = $('<tbody>');
 	for(var i = 0; i < cList.length; i++){
@@ -102,8 +103,9 @@ function showCandidateClassTable(cList, d, p){
 		var td = $('<tr>')
 			.append($('<td>').text(c[2]))
 			.append($('<td>').text(c[3]))
-			.append($('<td>').text(c[4]))
-			.append($('<td>').text(c[5]));
+			.append($('<td>').text(c[5]))
+			.append($('<td>').text(c[6]))
+			.append($('<td>').text(c[4]));
 		tbody.append(td);
 	}
 	table.append(tbody);
@@ -130,7 +132,7 @@ onload = function(){
 		<h2>現在の時間割</h2>
 		<?php showTimeTable($data); ?>
 		<h2>選択可能な授業</h2>
-		<span id="currentFocusLabel">編集する時限を上から選択してください</span>
+		<h4 id="currentFocusLabel">編集する時限を上から選択してください</h4>
 		<div id="candidateClassResultArea"></div>
 	</div>
 	<script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
