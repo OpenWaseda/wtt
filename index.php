@@ -73,6 +73,7 @@ table {
 	</style>
 	<script>
 
+var currentTerm = 0;	// 0: 春学期 1: 秋学期
 var focusDay = -1, focusPeriod = -1, focusElemSel, focusElemOldCSS;
 var focusListSel, focusListOldCSS;
 var timeTableSel;
@@ -156,60 +157,35 @@ function showCandidateClassTable(d, p){
 	var classIDList = periodTable[d][p];
 	for(var i = 0; i < classIDList.length; i++){
 		var c = classList[classIDList[i]];
+		if(!isInCurrentTerm(c)){
+			continue;
+		}
 		var td = $('<tr>')
 			.append($('<td>').text(c[1]))
 			.append($('<td>').text(c[3]))
 			.append($('<td>').append($('<a>').text(c[4]).attr("href", c[6]).attr("target", "_blank")))
-			.append($('<td>').text(c[5]))
+			.append($('<td>').text(c[5]).addClass("kk-" + kamokuKubunList[c[5]]))
 			.append($('<td>').text(c[2]))
 			.attr("onclick", "moveCLFocus(this, '"+classIDList[i]+"')");
 		tbody.append(td);
 	}
 	table.append(tbody);
 	//
-	//console.log(table);
-	//console.log(candidateClassResultAreaSel);
 	candidateClassResultAreaSel.empty().append(table);
 	table.tablesorter(); 
 } 
 
 function erasePeriod(){
-	var code = timeTableCells[focusDay][focusPeriod].classCode;
-	var c = classList[code];
-	if(!c){
-		console.log("Invalid classcode.")
-		return;
-	}
-	var pList = c[0];
-	for(var i = 0; i < pList.length; i++){
-		timeTableCells[pList[i][0]][pList[i][1]].text("");
-		timeTableCells[pList[i][0]][pList[i][1]].classCode = null;
-		if(kamokuKubunList[c[5]]){
-			timeTableCells[pList[i][0]][pList[i][1]].removeClass();
-		}
-	}
-	focusElemSel.text("");
 	takingClassCodeList.removeAnObject(code);
 	localStorage["defaultTable"] = JSON.stringify(takingClassCodeList);
+	refreshTimeTable();
 	updateStatistics();
 }
 
 function takeClass(code){
-	var c = classList[code];
-	if(!c){
-		console.log("Invalid classcode.")
-		return;
-	}
-	var pList = c[0];
-	for(var i = 0; i < pList.length; i++){
-		timeTableCells[pList[i][0]][pList[i][1]].text(c[4]);
-		timeTableCells[pList[i][0]][pList[i][1]].classCode = code;
-		if(kamokuKubunList[c[5]]){
-			timeTableCells[pList[i][0]][pList[i][1]].addClass("kk-" + kamokuKubunList[c[5]]);
-		}
-	}
 	takingClassCodeList.pushUnique(code);
 	localStorage["defaultTable"] = JSON.stringify(takingClassCodeList);
+	refreshTimeTable();
 	updateStatistics();
 }
 
@@ -223,6 +199,7 @@ function updateStatistics(){
 		"B4":0,
 		"C":0,
 		"D":0,
+		"unknown":0,
 		"sum":0
 	};
 	for(var i = 0; i < takingClassCodeList.length; i++){
@@ -233,10 +210,10 @@ function updateStatistics(){
 		}
 		if(kamokuKubunList[c[5]]){
 			stat[kamokuKubunList[c[5]]] += c[2];
-			stat["sum"] += c[2];
 		} else{
-			console.log("Unknown kamokukubun " + c[5]);
+			stat["unknown"] += c[2];	
 		}
+		stat["sum"] += c[2];
 	}
 	
 	//
@@ -252,6 +229,7 @@ function updateStatistics(){
 		.append($('<th>').text("B4").addClass("kk-B4"))
 		.append($('<th>').text("C").addClass("kk-C"))
 		.append($('<th>').text("D").addClass("kk-D"))
+		.append($('<th>').text("他"))
 		.append($('<th>').text("計"));
 	table.append($('<thead>').append(th));
 	var tbody = $('<tbody>');
@@ -264,11 +242,54 @@ function updateStatistics(){
 		.append($('<td>').text(stat["B4"]))
 		.append($('<td>').text(stat["C"]))
 		.append($('<td>').text(stat["D"]))
+		.append($('<td>').text(stat["unknown"]))
 		.append($('<td>').text(stat["sum"]));
 	tbody.append(td);
 	table.append(tbody);
 	//
 	statTableAreaSel.empty().append(table);
+}
+
+function termChanged(selector){
+	currentTerm = selector.value;
+	refreshTimeTable();
+}
+
+function refreshTimeTable(){
+	for(var d = 1; d < 7; d++){
+		for(var p = 1; p < 7; p++){
+			timeTableCells[d][p].text("");
+			timeTableCells[d][p].classCode = null;
+			timeTableCells[d][p].removeClass();
+		}
+	}
+
+	for(var i = 0; i < takingClassCodeList.length; i++){
+		var code = takingClassCodeList[i];
+		var c = classList[code];
+		if(!c){
+			console.log("Invalid classcode.")
+			return;
+		}
+		if(!isInCurrentTerm(c)){
+			continue;
+		}
+		var pList = c[0];
+		for(var p = 0; p < pList.length; p++){
+			timeTableCells[pList[p][0]][pList[p][1]].text(c[4]);
+			timeTableCells[pList[p][0]][pList[p][1]].classCode = code;
+			if(kamokuKubunList[c[5]]){
+				timeTableCells[pList[p][0]][pList[p][1]].addClass("kk-" + kamokuKubunList[c[5]]);
+			}
+		}
+		
+	}
+}
+
+function isInCurrentTerm(c){
+	return c[3].indexOf('通') != -1 ||
+		(currentTerm == 0 && c[3].indexOf('春') != -1) ||
+		(currentTerm == 1 && c[3].indexOf('秋') != -1);
 }
 
 onload = function(){
@@ -291,9 +312,8 @@ onload = function(){
 	} else{
 		takingClassCodeList = new Array();
 	}
-	for(var i = 0; i < takingClassCodeList.length; i++){
-		takeClass(takingClassCodeList[i]);
-	}
+	refreshTimeTable();
+	updateStatistics();
 }
 
 	</script>
@@ -307,6 +327,10 @@ onload = function(){
 	<div class="container">
 		<h1>WTT</h1>
 		<h2>現在の時間割</h2>
+		<select id="termSelector" onchange="termChanged(this);">
+			<option value="0" selected>春学期・通年</option> 
+			<option value="1">秋学期・通年</option>
+		</select>
 		<button onclick="erasePeriod()"><span class="glyphicon glyphicon-erase"></span></button>
 		<?php showTimeTable(); ?>
 		<div id="statTableArea"></div>
