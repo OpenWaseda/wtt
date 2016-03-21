@@ -258,7 +258,7 @@ function termChanged(selector){
 function refreshTimeTable(){
 	for(var d = 1; d < 7; d++){
 		for(var p = 1; p < 7; p++){
-			timeTableCells[d][p].text("");
+			timeTableCells[d][p].empty();
 			timeTableCells[d][p].classCode = null;
 			timeTableCells[d][p].removeClass();
 		}
@@ -276,7 +276,9 @@ function refreshTimeTable(){
 		}
 		var pList = c[0];
 		for(var p = 0; p < pList.length; p++){
-			timeTableCells[pList[p][0]][pList[p][1]].text(c[4]);
+			timeTableCells[pList[p][0]][pList[p][1]].empty()
+				.append($('<a>').text(c[4]).attr("href", c[6]).attr("target", "_blank"))
+				.append($('<small>').text("(" + c[2] + "単位)"));
 			timeTableCells[pList[p][0]][pList[p][1]].classCode = code;
 			if(kamokuKubunList[c[5]]){
 				timeTableCells[pList[p][0]][pList[p][1]].addClass("kk-" + kamokuKubunList[c[5]]);
@@ -302,7 +304,7 @@ onload = function(){
 	for(var p = 0; p < rowList.length; p++){
 		var days = rowList[p].children;
 		for(d = 1; d < days.length; d++){
-			var t = days[d];;
+			var t = days[d];
 			timeTableCells[d][p + 1] = $(t);
 		}
 	}
