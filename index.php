@@ -58,8 +58,14 @@ table {
 .kk-B4 {
 	background-color: #39beff;
 }
-.kk-C {
+.kk-C1 {
 	background-color: #fff1b1;
+}
+.kk-C2 {
+	background-color: #ffd44a;
+}
+.kk-C3 {
+	background-color: #ffc46f;
 }
 .kk-D {
 	background-color: #9489ff;
@@ -88,16 +94,16 @@ var kamokuKubunList = {
 	'基礎科目 選択必修': 		'A1',
 	'数学　必修':				'B1',
 	'実験・実習・制作':			'B3',
-	'専門必修':					'C',
+	'専門必修':					'C1',
 	'領域コース 必修':			'A1',
-	'専門選択必修':				'C',
+	'専門選択必修':				'C2',
 	'外国語　英語　必修':		'A2',
 	'外国語　英語　選択必修':	'A2',
 	'外国語　英語　選択':		'A2',
 	'実験・実習・制作　必修':	'B3',
 	'情報関連科目　選択':		'B4',
 	'自主挑戦科目':				'D',
-	'専門選択':					'C',
+	'専門選択':					'C3',
 	'綜合科目 選択':			'A1',
 	'自然科学　物理学　必修':	'B2',
 	'自然科学　物理学　選択':	'B2',
@@ -197,7 +203,9 @@ function updateStatistics(){
 		"B2":0,
 		"B3":0,
 		"B4":0,
-		"C":0,
+		"C1":0,
+		"C2":0,
+		"C3":0,
 		"D":0,
 		"unknown":0,
 		"sum":0
@@ -220,18 +228,24 @@ function updateStatistics(){
 	var table = $('<table>')
 		.addClass("table")
 		.addClass("table-bordered");
-	var th = $('<tr>')
+	var th0 = $('<tr>')
+		.append($('<th>').text("A群").attr("colspan", "2"))
+		.append($('<th>').text("B群").attr("colspan", "4"))
+		.append($('<th>').text("C群").attr("colspan", "3"))
+		.append($('<th>').text("D").addClass("kk-D").attr("rowspan", "2"))
+		.append($('<th>').text("他").attr("rowspan", "2"))
+		.append($('<th>').text("計").attr("rowspan", "2"));
+	var th1 = $('<tr>')
 		.append($('<th>').text("A1").addClass("kk-A1"))
 		.append($('<th>').text("A2").addClass("kk-A2"))
 		.append($('<th>').text("B1").addClass("kk-B1"))
 		.append($('<th>').text("B2").addClass("kk-B2"))
 		.append($('<th>').text("B3").addClass("kk-B3"))
 		.append($('<th>').text("B4").addClass("kk-B4"))
-		.append($('<th>').text("C").addClass("kk-C"))
-		.append($('<th>').text("D").addClass("kk-D"))
-		.append($('<th>').text("他"))
-		.append($('<th>').text("計"));
-	table.append($('<thead>').append(th));
+		.append($('<th>').text("必修").addClass("kk-C1"))
+		.append($('<th>').text("選択必修").addClass("kk-C2"))
+		.append($('<th>').text("選択").addClass("kk-C3"));
+	table.append($('<thead>').append(th0).append(th1));
 	var tbody = $('<tbody>');
 	var td = $('<tr>')
 		.append($('<td>').text(stat["A1"]))
@@ -240,7 +254,9 @@ function updateStatistics(){
 		.append($('<td>').text(stat["B2"]))
 		.append($('<td>').text(stat["B3"]))
 		.append($('<td>').text(stat["B4"]))
-		.append($('<td>').text(stat["C"]))
+		.append($('<td>').text(stat["C1"]))
+		.append($('<td>').text(stat["C2"]))
+		.append($('<td>').text(stat["C3"]))
 		.append($('<td>').text(stat["D"]))
 		.append($('<td>').text(stat["unknown"]))
 		.append($('<td>').text(stat["sum"]));
