@@ -16,7 +16,7 @@ function showTimeTable($maxPeriod = 6){
 		print "<tr>";
 		print "<th>{$p}</th>";
 		for($d = 1; $d < 7; $d++){
-			print"<td onclick='moveTTFocus(this, {$d}, {$p});'>";
+			print"<td onclick='moveTTFocus({$d}, {$p});'>";
 			print "</td>";
 		}
 		print "</tr>";
@@ -80,7 +80,7 @@ table {
 	<script>
 
 var currentTerm = 0;	// 0: 春学期 1: 秋学期
-var focusDay = -1, focusPeriod = -1, focusElemSel, focusElemOldCSS;
+var focusDay = -1, focusPeriod = -1, focusElemSel;
 var focusListSel, focusListOldCSS;
 var timeTableSel;
 var statTableAreaSel;
@@ -120,23 +120,21 @@ var takingClassCodeList = new Array();
 	print("var classList = " . $str . "\n");
 ?>
 
-function moveTTFocus(elem, d, p){
+function moveTTFocus(d, p){
 	focusDay = d;
 	focusPeriod = p;
 	currentFocusLabelSel.text(youbiList[d] + "曜" + p + "限");
 	if(focusElemSel){
-		focusElemSel.css("border", focusElemOldCSS);
+		focusElemSel.css("border", focusElemSel.oldCSS);
 	}
-	focusElemSel = $(elem);
-	focusElemOldCSS = focusElemSel.css("border");
+	focusElemSel = timeTableCells[d][p];
+	focusElemSel.oldCSS = focusElemSel.css("border");
 	focusElemSel.css("border", "2px solid #ff0000");
 	//
 	showCandidateClassTable(d, p);
 }
 
 function moveCLFocus(elem, code){
-	console.log(code);
-	//
 	if(focusListSel){
 		focusListSel.css("border", focusListOldCSS);
 	}
@@ -160,7 +158,11 @@ function showCandidateClassTable(d, p){
 		.append($('<th>').text("単位数").css("width", "10%"));
 	table.append($('<thead>').append(th));
 	var tbody = $('<tbody>');
+	candidateClassResultAreaSel.empty();
 	var classIDList = periodTable[d][p];
+	if(!classIDList){
+		return;
+	}
 	for(var i = 0; i < classIDList.length; i++){
 		var c = classList[classIDList[i]];
 		if(!isInCurrentTerm(c)){
@@ -177,11 +179,15 @@ function showCandidateClassTable(d, p){
 	}
 	table.append(tbody);
 	//
-	candidateClassResultAreaSel.empty().append(table);
+	candidateClassResultAreaSel.append(table);
 	table.tablesorter(); 
 } 
 
 function erasePeriod(){
+	code = focusElemSel.classCode;
+	if(!code){
+		console.log("Invalid code " + code);
+	}
 	takingClassCodeList.removeAnObject(code);
 	localStorage["defaultTable"] = JSON.stringify(takingClassCodeList);
 	refreshTimeTable();
@@ -295,6 +301,10 @@ function refreshTimeTable(){
 			timeTableCells[pList[p][0]][pList[p][1]].empty()
 				.append($('<a>').text(c[4]).attr("href", c[6]).attr("target", "_blank"))
 				.append($('<small>').text("(" + c[2] + "単位)"));
+			if(timeTableCells[pList[p][0]][pList[p][1]].classCode){
+				window.alert(youbiList[pList[p][0]] + "曜" + pList[p][1] + "限に重複している授業があります。");
+				console.log("duplicate class at (" + pList[p][0] + "," + pList[p][1] + ")");
+			}
 			timeTableCells[pList[p][0]][pList[p][1]].classCode = code;
 			if(kamokuKubunList[c[5]]){
 				timeTableCells[pList[p][0]][pList[p][1]].addClass("kk-" + kamokuKubunList[c[5]]);
