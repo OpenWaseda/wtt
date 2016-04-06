@@ -114,9 +114,9 @@ var kamokuKubunList = {
 var takingClassCodeList = new Array();
 
 <?php
-	$str = file_get_contents("./data/2016_kikan_index.json");
+	$str = file_get_contents("./data/store/2016_converted_262006_index.json");
 	print("var periodTable = " . $str . "\n");
-	$str = file_get_contents("./data/2016_kikan.json");
+	$str = file_get_contents("./data/store/2016_converted_262006.json");
 	print("var classList = " . $str . "\n");
 ?>
 
@@ -300,7 +300,8 @@ function refreshTimeTable(){
 		for(var p = 0; p < pList.length; p++){
 			timeTableCells[pList[p][0]][pList[p][1]].empty()
 				.append($('<a>').text(c[4]).attr("href", c[6]).attr("target", "_blank"))
-				.append($('<small>').text("(" + c[2] + "単位)"));
+				.append($('<small>').text("(" + c[2] + "単位)"))
+				.append($('<div>').append($('<small>').text(c[8])/*.attr("class", "pull-right")*/));
 			if(timeTableCells[pList[p][0]][pList[p][1]].classCode){
 				window.alert(youbiList[pList[p][0]] + "曜" + pList[p][1] + "限に重複している授業があります。");
 				console.log("duplicate class at (" + pList[p][0] + "," + pList[p][1] + ")");

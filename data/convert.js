@@ -1,5 +1,7 @@
 var fs = require('fs');
-require('./ext.js');
+//require('./ext.js');
+
+var gakubuID = "262006";
 
 function findData(m0, mp, me, env){
 	var s, t;
@@ -41,7 +43,11 @@ function getPeriodList(pStr){
 	return pList1;
 }
 
-fs.readFile('./kikan_all.txt', 'utf8', function (err, text) {
+fs.readFile('2016_pages_' + gakubuID + ".json", 'utf8', function (err, text) {
+	if(err){
+		console.log("File open error.");
+		return;
+	}
 	var env = new Object();
 	var tList = new Object();
 	var tMinList = new Object();
@@ -91,7 +97,9 @@ fs.readFile('./kikan_all.txt', 'utf8', function (err, text) {
 			t["学期"],
 			t["科目名"],
 			t["科目区分"],
-			t["URL"]
+			t["URL"],
+			t["担当教員"],
+			t["使用教室"],
 		];
 
 		for(var i = 0; i < t["pList"].length; i++){
@@ -103,8 +111,8 @@ fs.readFile('./kikan_all.txt', 'utf8', function (err, text) {
 	}
 	//console.log(JSON.stringify(tList, "", "    "));
 	//console.log(JSON.stringify(tMinList, "", "    "));
-	fs.writeFile('2016_kikan.json', JSON.stringify(tMinList));
+	fs.writeFile('2016_converted_' + gakubuID + '.json', JSON.stringify(tMinList));
 	console.log(JSON.stringify(tIndexTable, "", "    "));
-	fs.writeFile('2016_kikan_index.json', JSON.stringify(tIndexTable));
+	fs.writeFile('2016_converted_' + gakubuID + '_index.json', JSON.stringify(tIndexTable));
 	//console.log(uqList);
 });
