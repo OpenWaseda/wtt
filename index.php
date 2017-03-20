@@ -114,9 +114,9 @@ var kamokuKubunList = {
 var takingClassCodeList = new Array();
 
 <?php
-	$str = file_get_contents("./data/store/2016_converted_262006_index.json");
+	$str = file_get_contents("./data/store/conv_table_2017_26.json");
 	print("var periodTable = " . $str . "\n");
-	$str = file_get_contents("./data/store/2016_converted_262006.json");
+	$str = file_get_contents("./data/store/conv_data_2017_26.json");
 	print("var classList = " . $str . "\n");
 ?>
 

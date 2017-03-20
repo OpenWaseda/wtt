@@ -17,7 +17,8 @@ var opt = {
 	uri: '',
 };
 
-var gakubuID = "262006";
+var year = 2017;
+var gakubuID = "26";
 
 /*
 772 <option label="政経" value="111973">政経</option>
@@ -76,7 +77,7 @@ function getClassPage(index){
 	opt.uri = URIBase + idList[index];
 	if(index >= idList.length){
 		console.log("sum: " + idList.length);
-		fs.writeFile('2016_pages_' + gakubuID + ".json", htmlStr);
+		fs.writeFile('desc_' + year + '_' + gakubuID + ".txt", htmlStr);
 		return;
 	}
 	console.log(index);
@@ -92,7 +93,7 @@ function getClassPage(index){
 	});
 }
 
-fs.readFile('./2016_id_' + gakubuID + ".json", 'utf8', function (err, text) {
+fs.readFile('./id_' + year + '_' + gakubuID + ".json", 'utf8', function (err, text) {
 	if(err){
 		console.log("File open error." + err);
 		return;

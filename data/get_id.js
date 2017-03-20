@@ -16,13 +16,18 @@ var opt = {
 	form: {
 		"p_number": "50",
 		"p_page": "1",
-		"p_gakubu": "9S2013",
+		"p_gakubu": "28",
 		"pClsOpnSts": "123",
 		"ControllerParameters": "JAA103SubCon",
 		"pLng": "jp",
 	},
 	json: true
 };
+
+/*
+26 0000100201 2017 2600001002 26
+              year            gakubu
+*/
 
 /*
 772 <option label="政経" value="111973">政経</option>
@@ -89,7 +94,10 @@ function getPage(page){
 			if(env.text.indexOf("ch-message") != -1){
 				console.log("Out of Pages.");
 				console.log(JSON.stringify(idList, "", "    "));
-				fs.writeFile('2016_id_' + opt.form["p_gakubu"] + ".json", JSON.stringify(idList, "", "  "));
+				fs.writeFile('id_' +
+					idList[0].substr(12, 4) + '_' + 
+					idList[0].substr(-2) + ".json", 
+					JSON.stringify(idList, "", "  "));
 				return;
 			}
 			env.p = env.text.indexOf("block_main_start", env.p + 1);
@@ -103,7 +111,6 @@ function getPage(page){
 				findData("<td", ">", "<", env);
 				findData("<td", ">", "<", env);
 				id = findData("<td", ", '", "')", env);
-				//console.log(id);
 				idList.push(id);
 			}
 			getPage(page + 1);

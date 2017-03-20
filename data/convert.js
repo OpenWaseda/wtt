@@ -1,7 +1,8 @@
 var fs = require('fs');
 //require('./ext.js');
 
-var gakubuID = "262006";
+var year = 2017
+var gakubuID = 26;
 
 function findData(m0, mp, me, env){
 	var s, t;
@@ -43,7 +44,7 @@ function getPeriodList(pStr){
 	return pList1;
 }
 
-fs.readFile('2016_pages_' + gakubuID + ".json", 'utf8', function (err, text) {
+fs.readFile('store/desc_' + year + '_' + gakubuID + '.txt', 'utf8', function (err, text) {
 	if(err){
 		console.log("File open error.");
 		return;
@@ -111,8 +112,8 @@ fs.readFile('2016_pages_' + gakubuID + ".json", 'utf8', function (err, text) {
 	}
 	//console.log(JSON.stringify(tList, "", "    "));
 	//console.log(JSON.stringify(tMinList, "", "    "));
-	fs.writeFile('2016_converted_' + gakubuID + '.json', JSON.stringify(tMinList));
+	fs.writeFile('store/conv_table_' + year + '_' + gakubuID + '.json', JSON.stringify(tMinList));
 	console.log(JSON.stringify(tIndexTable, "", "    "));
-	fs.writeFile('2016_converted_' + gakubuID + '_index.json', JSON.stringify(tIndexTable));
+	fs.writeFile('store/conv_data_' + year + '_' + gakubuID + '.json', JSON.stringify(tIndexTable));
 	//console.log(uqList);
 });

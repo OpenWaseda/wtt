@@ -1,6 +1,7 @@
-
+.DS_Store
 *.swp
 data/node_modules
 data/backup
 data/model_html
 data/store
+*.json
