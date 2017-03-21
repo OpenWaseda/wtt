@@ -1,30 +1,4 @@
 <?php
-
-$youbiList = array("日", "月", "火", "水", "木", "金", "土");
-
-function showTimeTable($maxPeriod = 6){
-	global $youbiList;
-	print "<table id='timeTable' class='table table-bordered'>";
-	print "<thead><tr>";
-	print "<th style='width: 8%;'></th>";
-	for($d = 1; $d < 7; $d++){
-		print "<td>{$youbiList[$d]}</td>";
-	}
-	print "</tr></thead>";
-	print "<tbody>";
-	for($p = 1; $p <= $maxPeriod; $p++){
-		print "<tr>";
-		print "<th>{$p}</th>";
-		for($d = 1; $d < 7; $d++){
-			print"<td onclick='moveTTFocus({$d}, {$p});'>";
-			print "</td>";
-		}
-		print "</tr>";
-	}
-	print "</tbody>";
-	print "</table>";
-}
-
 ?>
 
 <!DOCTYPE html>
@@ -42,25 +16,33 @@ function showTimeTable($maxPeriod = 6){
 		<script src="//oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
 		<script src="//oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
 	<![endif]-->
-<?php require_once("analyticstracking.php") ?>
+	<script>
+	  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+	  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+	  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+	  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+	  ga('create', 'UA-72061582-1', 'auto');
+	  ga('send', 'pageview');
+	</script>
 </head>
 <body>
 	<div class="container">
 		<h1>WTT</h1>
 		<span>
-			<select id="yearSelector" onchange="">
+			<select id="yearSelector">
 				<option value="2017" selected>2017年度</option> 
 				<option value="2016">2016年度</option>
 				<option value="2015">2015年度</option>
 				<option value="2014">2014年度</option>
 			</select>
-			<select id="termSelector" onchange="termChanged(this);">
+			<select id="termSelector">
 				<option value="0" selected>春学期・通年</option> 
 				<option value="1">秋学期・通年</option>
 			</select>
 		</span>
-		<button onclick="erasePeriod()"><span class="glyphicon glyphicon-erase"></span></button>
-		<?php showTimeTable(); ?>
+		<button id="erasePeriodButton"><span class="glyphicon glyphicon-erase"></span></button>
+		<div id="timeTableArea"></div>
 		<div id="statTableArea"></div>
 		<h2>選択可能な授業</h2>
 		<h4 id="currentFocusLabel">編集する時限を上から選択してください</h4>
@@ -69,5 +51,9 @@ function showTimeTable($maxPeriod = 6){
 	<script src="js/bootstrap.min.js"></script>
 	<script type="text/javascript" src="./js/jquery.tablesorter.js"></script>
 	<script type="text/javascript" src="./js/ext.js"></script>
+	<div id="footerDiv">
+		<hr>
+		<p><a href="https://github.com/OpenWaseda">The OpenWaseda Project</a></p>
+	</div>
 </body>
 </html>

@@ -17,7 +17,7 @@ var opt = {
 	uri: '',
 };
 
-var year = 2017;
+var year = 2015;
 var gakubuID = "26";
 
 /*
@@ -77,7 +77,7 @@ function getClassPage(index){
 	opt.uri = URIBase + idList[index];
 	if(index >= idList.length){
 		console.log("sum: " + idList.length);
-		fs.writeFile('desc_' + year + '_' + gakubuID + ".txt", htmlStr);
+		fs.writeFile('store/' + year + '_' + gakubuID + "_desc.txt", htmlStr);
 		return;
 	}
 	console.log(index);
@@ -93,7 +93,7 @@ function getClassPage(index){
 	});
 }
 
-fs.readFile('./id_' + year + '_' + gakubuID + ".json", 'utf8', function (err, text) {
+fs.readFile('./store/' + year + '_' + gakubuID + "_id.json", 'utf8', function (err, text) {
 	if(err){
 		console.log("File open error." + err);
 		return;

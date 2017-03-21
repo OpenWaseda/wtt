@@ -3,271 +3,380 @@ var JQuery = (function () {
     }
     return JQuery;
 }());
-var currentTerm = 0; // 0: 春学期 1: 秋学期
-var focusDay = -1, focusPeriod = -1, focusElemSel;
-var focusListSel, focusListOldCSS;
-var timeTableSel;
-var statTableAreaSel;
-var timeTableCells = [[], [], [], [], [], [], []];
-var currentFocusLabelSel;
-var candidateClassResultAreaSel;
-var youbiList = ["日", "月", "火", "水", "木", "金", "土"];
-var kamokuKubunList = {
-    '綜合科目 選択必修': 'A1',
-    '特論科目 選択必修': 'A1',
-    '基礎科目 選択必修': 'A1',
-    '数学　必修': 'B1',
-    '実験・実習・制作': 'B3',
-    '専門必修': 'C1',
-    '領域コース 必修': 'A1',
-    '専門選択必修': 'C2',
-    '外国語　英語　必修': 'A2',
-    '外国語　英語　選択必修': 'A2',
-    '外国語　英語　選択': 'A2',
-    '実験・実習・制作　必修': 'B3',
-    '情報関連科目　選択': 'B4',
-    '自主挑戦科目': 'D',
-    '専門選択': 'C3',
-    '綜合科目 選択': 'A1',
-    '自然科学　物理学　必修': 'B2',
-    '自然科学　物理学　選択': 'B2',
-    '自然科学　化学　必修': 'B2',
-    '自然科学　生命科学　必修': 'B2',
-    '情報関連科目　必修': 'B4'
-};
-var takingClassCodeList = new Array();
-/*
-<?php
-    $str = file_get_contents("./data/store/2017_26_conv_table.json");
-    print("var periodTable = " . $str . "\n");
-    $str = file_get_contents("./data/store/2017_26_conv_data.json");
-    print("var classList = " . $str . "\n");
-?>
- */
-var periodTable = [];
-var classList = [];
-$(function () {
-    $.getJSON("data/store/2017_26_conv_table.json", function (data) {
-        periodTable = data;
-    });
-    $.getJSON("data/store/2017_26_conv_data.json", function (data) {
-        classList = data;
-    });
-});
-function moveTTFocus(d, p) {
-    focusDay = d;
-    focusPeriod = p;
-    currentFocusLabelSel.text(youbiList[d] + "曜" + p + "限");
-    if (focusElemSel) {
-        focusElemSel.css("border", focusElemSel.oldCSS);
-    }
-    focusElemSel = timeTableCells[d][p];
-    focusElemSel.oldCSS = focusElemSel.css("border");
-    focusElemSel.css("border", "2px solid #ff0000");
-    //
-    showCandidateClassTable(d, p);
-}
-function moveCLFocus(elem, code) {
-    if (focusListSel) {
-        focusListSel.css("border", focusListOldCSS);
-    }
-    focusListSel = $(elem);
-    focusListOldCSS = focusListSel.css("border");
-    focusListSel.css("border", "2px solid #ff0000");
-    //
-    takeClass(code);
-}
-function showCandidateClassTable(d, p) {
-    var table = $('<table>')
-        .addClass("tablesorter")
-        .addClass("table")
-        .addClass("table-bordered");
-    var th = $('<tr>')
-        .append($('<th>').text("学年").css("width", "10%"))
-        .append($('<th>').text("学期").css("width", "10%"))
-        .append($('<th>').text("授業名"))
-        .append($('<th>').text("科目群").css("width", "20%"))
-        .append($('<th>').text("単位数").css("width", "10%"));
-    table.append($('<thead>').append(th));
-    var tbody = $('<tbody>');
-    candidateClassResultAreaSel.empty();
-    var classIDList = periodTable[d][p];
-    if (!classIDList) {
-        return;
-    }
-    for (var i = 0; i < classIDList.length; i++) {
-        var c = classList[classIDList[i]];
-        if (!isInCurrentTerm(c)) {
-            continue;
+var WTTDatabase = (function () {
+    function WTTDatabase(wtt) {
+        this.periodTable = {};
+        this.classList = {};
+        this.availableList = [
+            "2015_26",
+            "2016_26",
+            "2017_26",
+        ];
+        var that = this;
+        this.wtt = wtt;
+        for (var i = 0; i < this.availableList.length; i++) {
+            var f_table = function () {
+                var that2 = that;
+                var key = that.availableList[i];
+                return function (data) {
+                    that2.periodTable[key] = data;
+                    that2.wtt.refreshTimeTable();
+                };
+            }();
+            var f_data = function () {
+                var that2 = that;
+                var key = that.availableList[i];
+                return function (data) {
+                    that2.classList[key] = data;
+                    that2.wtt.refreshTimeTable();
+                };
+            }();
+            $.getJSON("data/store/" + this.availableList[i] + "_conv_table.json", f_table);
+            $.getJSON("data/store/" + this.availableList[i] + "_conv_data.json", f_data);
+            console.log(this);
         }
-        var td = $('<tr>')
-            .append($('<td>').text(c[1]))
-            .append($('<td>').text(c[3]))
-            .append($('<td>').append($('<a>').text(c[4]).attr("href", c[6]).attr("target", "_blank")))
-            .append($('<td>').text(c[5]).addClass("kk-" + kamokuKubunList[c[5]]))
-            .append($('<td>').text(c[2]))
-            .attr("onclick", "moveCLFocus(this, '" + classIDList[i] + "')");
-        tbody.append(td);
     }
-    table.append(tbody);
-    //
-    candidateClassResultAreaSel.append(table);
-    table.tablesorter();
-}
-function erasePeriod() {
-    var code = focusElemSel.classCode;
-    if (!code) {
-        console.log("Invalid code " + code);
-    }
-    takingClassCodeList.removeAnObject(code);
-    localStorage["defaultTable"] = JSON.stringify(takingClassCodeList);
-    refreshTimeTable();
-    updateStatistics();
-}
-function takeClass(code) {
-    takingClassCodeList.pushUnique(code);
-    localStorage["defaultTable"] = JSON.stringify(takingClassCodeList);
-    refreshTimeTable();
-    updateStatistics();
-}
-function updateStatistics() {
-    var stat = {
-        "A1": 0,
-        "A2": 0,
-        "B1": 0,
-        "B2": 0,
-        "B3": 0,
-        "B4": 0,
-        "C1": 0,
-        "C2": 0,
-        "C3": 0,
-        "D": 0,
-        "unknown": 0,
-        "sum": 0
+    WTTDatabase.prototype.getClassIDListForPeriod = function (year, gakubu, day, period) {
+        try {
+            return this.periodTable["" + year + "_" + gakubu][day][period];
+        }
+        catch (e) {
+            return [];
+        }
     };
-    for (var i = 0; i < takingClassCodeList.length; i++) {
-        var code = takingClassCodeList[i];
-        var c = classList[code];
-        if (!c) {
-            continue;
+    WTTDatabase.prototype.getClassInfoForClassID = function (id) {
+        try {
+            return this.classList[id.substr(12, 4) + "_" + id.substr(-2)][id];
         }
-        if (kamokuKubunList[c[5]]) {
-            stat[kamokuKubunList[c[5]]] += c[2];
+        catch (e) {
+            return null;
+        }
+    };
+    WTTDatabase.prototype.isClassIDOfYear = function (id, year) {
+        return parseInt(id.substr(12, 4), 10) == year;
+    };
+    return WTTDatabase;
+}());
+var WTT = (function () {
+    function WTT() {
+        this.timeTableCells = [];
+        this.takingClassCodeList = [];
+        this.currentTerm = 0; // 0: 春学期 1: 秋学期
+        this.currentYear = 2017;
+        this.currentGakubu = 26;
+        this.focusDay = -1;
+        this.focusPeriod = -1;
+        this.youbiList = ["日", "月", "火", "水", "木", "金", "土"];
+        this.kamokuKubunList = {
+            '綜合科目 選択必修': 'A1',
+            '特論科目 選択必修': 'A1',
+            '基礎科目 選択必修': 'A1',
+            '数学　必修': 'B1',
+            '実験・実習・制作': 'B3',
+            '専門必修': 'C1',
+            '領域コース 必修': 'A1',
+            '専門選択必修': 'C2',
+            '外国語　英語　必修': 'A2',
+            '外国語　英語　選択必修': 'A2',
+            '外国語　英語　選択': 'A2',
+            '実験・実習・制作　必修': 'B3',
+            '情報関連科目　選択': 'B4',
+            '自主挑戦科目': 'D',
+            '専門選択': 'C3',
+            '綜合科目 選択': 'A1',
+            '自然科学　物理学　必修': 'B2',
+            '自然科学　物理学　選択': 'B2',
+            '自然科学　化学　必修': 'B2',
+            '自然科学　生命科学　必修': 'B2',
+            '情報関連科目　必修': 'B4'
+        };
+        var that = this;
+        /*
+        $.getJSON("data/store/2017_26_conv_table.json" , function(data) {
+            that.periodTable = data;
+            that.refreshTimeTable();
+        });
+        $.getJSON("data/store/2017_26_conv_data.json" , function(data) {
+            that.classList = data;
+            that.refreshTimeTable();
+        });
+         */
+        this.db = new WTTDatabase(this);
+        // Generate time table cells
+        var ttArea = $("#timeTableArea");
+        var table = $('<table>')
+            .attr('id', 'timeTable')
+            .addClass("table")
+            .addClass("table-bordered");
+        var thead = $('<thead>');
+        var tr = $('<tr>')
+            .append($('<th>').text("").css("width", "8%"));
+        for (var i = 1; i < this.youbiList.length; i++) {
+            tr.append($('<th>').text(this.youbiList[i]));
+        }
+        thead.append(tr);
+        var tbody = $('<tbody>');
+        for (var i = 1; i <= 6; i++) {
+            var tr = $('<tr>');
+            tr.append($('<th>').text(i));
+            for (var k = 1; k < this.youbiList.length; k++) {
+                var f = function () {
+                    var that2 = that;
+                    var period = i;
+                    var day = k;
+                    return function () { that2.moveTTFocus(day, period); };
+                }();
+                tr.append($('<td>').on("click", f));
+            }
+            tbody.append(tr);
+        }
+        table.append(thead).append(tbody);
+        ttArea.append(table);
+        //
+        this.currentFocusLabelSel = $("#currentFocusLabel");
+        this.candidateClassResultAreaSel = $("#candidateClassResultArea");
+        this.timeTableSel = $("#timeTable");
+        this.statTableAreaSel = $("#statTableArea");
+        //
+        var rowList = this.timeTableSel[0].children[1].children;
+        for (var p = 0; p < rowList.length; p++) {
+            var days = rowList[p].children;
+            for (var d = 1; d < days.length; d++) {
+                var t = days[d];
+                if (!this.timeTableCells[d])
+                    this.timeTableCells[d] = [];
+                this.timeTableCells[d][p + 1] = $(t);
+            }
+        }
+        // Restore Data
+        if (localStorage["defaultTable"]) {
+            this.takingClassCodeList = JSON.parse(localStorage["defaultTable"]);
         }
         else {
-            stat["unknown"] += c[2];
+            this.takingClassCodeList = new Array();
         }
-        stat["sum"] += c[2];
+        this.refreshTimeTable();
+        this.updateStatistics();
+        $('#erasePeriodButton').on("click", function () {
+            that.erasePeriod();
+        });
+        $('#termSelector').on("change", function () {
+            that.termChanged(this);
+        });
+        $('#yearSelector').on("change", function () {
+            that.yearChanged(this);
+        });
     }
-    //
-    var table = $('<table>')
-        .addClass("table")
-        .addClass("table-bordered");
-    var th0 = $('<tr>')
-        .append($('<th>').text("A群").attr("colspan", "2"))
-        .append($('<th>').text("B群").attr("colspan", "4"))
-        .append($('<th>').text("C群").attr("colspan", "3"))
-        .append($('<th>').text("D").addClass("kk-D").attr("rowspan", "2"))
-        .append($('<th>').text("他").attr("rowspan", "2"))
-        .append($('<th>').text("計").attr("rowspan", "2"));
-    var th1 = $('<tr>')
-        .append($('<th>').text("A1").addClass("kk-A1"))
-        .append($('<th>').text("A2").addClass("kk-A2"))
-        .append($('<th>').text("B1").addClass("kk-B1"))
-        .append($('<th>').text("B2").addClass("kk-B2"))
-        .append($('<th>').text("B3").addClass("kk-B3"))
-        .append($('<th>').text("B4").addClass("kk-B4"))
-        .append($('<th>').text("必修").addClass("kk-C1"))
-        .append($('<th>').text("選択必修").addClass("kk-C2"))
-        .append($('<th>').text("選択").addClass("kk-C3"));
-    table.append($('<thead>').append(th0).append(th1));
-    var tbody = $('<tbody>');
-    var td = $('<tr>')
-        .append($('<td>').text(stat["A1"]))
-        .append($('<td>').text(stat["A2"]))
-        .append($('<td>').text(stat["B1"]))
-        .append($('<td>').text(stat["B2"]))
-        .append($('<td>').text(stat["B3"]))
-        .append($('<td>').text(stat["B4"]))
-        .append($('<td>').text(stat["C1"]))
-        .append($('<td>').text(stat["C2"]))
-        .append($('<td>').text(stat["C3"]))
-        .append($('<td>').text(stat["D"]))
-        .append($('<td>').text(stat["unknown"]))
-        .append($('<td>').text(stat["sum"]));
-    tbody.append(td);
-    table.append(tbody);
-    //
-    statTableAreaSel.empty().append(table);
-}
-function termChanged(selector) {
-    currentTerm = selector.value;
-    refreshTimeTable();
-}
-function refreshTimeTable() {
-    for (var d = 1; d < 7; d++) {
-        for (var p = 1; p < 7; p++) {
-            timeTableCells[d][p].empty();
-            timeTableCells[d][p].classCode = null;
-            timeTableCells[d][p].removeClass();
+    WTT.prototype.moveTTFocus = function (d, p) {
+        this.focusDay = d;
+        this.focusPeriod = p;
+        this.currentFocusLabelSel.text(this.youbiList[d] + "曜" + p + "限");
+        if (this.focusElemSel) {
+            this.focusElemSel.css("border", this.focusElemSel.oldCSS);
         }
-    }
-    for (var i = 0; i < takingClassCodeList.length; i++) {
-        var code = takingClassCodeList[i];
-        var c = classList[code];
-        if (!c) {
-            console.log("Invalid classcode.");
+        this.focusElemSel = this.timeTableCells[d][p];
+        this.focusElemSel.oldCSS = this.focusElemSel.css("border");
+        this.focusElemSel.css("border", "2px solid #ff0000");
+        //
+        this.showCandidateClassTable(d, p);
+    };
+    WTT.prototype.moveCLFocus = function (elem, code) {
+        if (this.focusListSel) {
+            this.focusListSel.css("border", this.focusListOldCSS);
+        }
+        this.focusListSel = $(elem);
+        this.focusListOldCSS = this.focusListSel.css("border");
+        this.focusListSel.css("border", "2px solid #ff0000");
+        //
+        this.takeClass(code);
+    };
+    WTT.prototype.showCandidateClassTable = function (d, p) {
+        var that = this;
+        var table = $('<table>')
+            .addClass("tablesorter")
+            .addClass("table")
+            .addClass("table-bordered");
+        var th = $('<tr>')
+            .append($('<th>').text("学年").css("width", "10%"))
+            .append($('<th>').text("学期").css("width", "10%"))
+            .append($('<th>').text("授業名"))
+            .append($('<th>').text("科目群").css("width", "20%"))
+            .append($('<th>').text("単位数").css("width", "10%"));
+        table.append($('<thead>').append(th));
+        var tbody = $('<tbody>');
+        this.candidateClassResultAreaSel.empty();
+        var classIDList = this.db.getClassIDListForPeriod(this.currentYear, this.currentGakubu, d, p);
+        if (!classIDList) {
             return;
         }
-        if (!isInCurrentTerm(c)) {
-            continue;
-        }
-        var pList = c[0];
-        for (var p = 0; p < pList.length; p++) {
-            timeTableCells[pList[p][0]][pList[p][1]].empty()
-                .append($('<a>').text(c[4]).attr("href", c[6]).attr("target", "_blank"))
-                .append($('<small>').text("(" + c[2] + "単位)"))
-                .append($('<div>').append($('<small>').text(c[8]) /*.attr("class", "pull-right")*/));
-            if (timeTableCells[pList[p][0]][pList[p][1]].classCode) {
-                window.alert(youbiList[pList[p][0]] + "曜" + pList[p][1] + "限に重複している授業があります。");
-                console.log("duplicate class at (" + pList[p][0] + "," + pList[p][1] + ")");
+        for (var i = 0; i < classIDList.length; i++) {
+            var code = classIDList[i];
+            var c = this.db.getClassInfoForClassID(code);
+            if (!this.isInCurrentTerm(c, code)) {
+                continue;
             }
-            timeTableCells[pList[p][0]][pList[p][1]].classCode = code;
-            if (kamokuKubunList[c[5]]) {
-                timeTableCells[pList[p][0]][pList[p][1]].addClass("kk-" + kamokuKubunList[c[5]]);
+            var f = function () {
+                var that2 = that;
+                var classID = code;
+                return function () { that2.moveCLFocus(this, classID); };
+            }();
+            var td = $('<tr>')
+                .append($('<td>').text(c[1]))
+                .append($('<td>').text(c[3]))
+                .append($('<td>').append($('<a>').text(c[4]).attr("href", c[6]).attr("target", "_blank")))
+                .append($('<td>').text(c[5]).addClass("kk-" + this.kamokuKubunList[c[5]]))
+                .append($('<td>').text(c[2]))
+                .on("click", f);
+            tbody.append(td);
+        }
+        table.append(tbody);
+        //
+        this.candidateClassResultAreaSel.append(table);
+        table.tablesorter();
+    };
+    WTT.prototype.erasePeriod = function () {
+        var code = this.focusElemSel.classCode;
+        if (!code) {
+            console.log("Invalid code " + code);
+        }
+        this.takingClassCodeList.removeAnObject(code);
+        localStorage["defaultTable"] = JSON.stringify(this.takingClassCodeList);
+        this.refreshTimeTable();
+        this.updateStatistics();
+    };
+    WTT.prototype.takeClass = function (code) {
+        this.takingClassCodeList.pushUnique(code);
+        localStorage["defaultTable"] = JSON.stringify(this.takingClassCodeList);
+        this.refreshTimeTable();
+        this.updateStatistics();
+    };
+    WTT.prototype.updateStatistics = function () {
+        var stat = {
+            "A1": 0,
+            "A2": 0,
+            "B1": 0,
+            "B2": 0,
+            "B3": 0,
+            "B4": 0,
+            "C1": 0,
+            "C2": 0,
+            "C3": 0,
+            "D": 0,
+            "unknown": 0,
+            "sum": 0
+        };
+        for (var i = 0; i < this.takingClassCodeList.length; i++) {
+            var code = this.takingClassCodeList[i];
+            var c = this.db.getClassInfoForClassID(code);
+            if (!c) {
+                continue;
+            }
+            if (this.kamokuKubunList[c[5]]) {
+                stat[this.kamokuKubunList[c[5]]] += c[2];
+            }
+            else {
+                stat["unknown"] += c[2];
+            }
+            stat["sum"] += c[2];
+        }
+        //
+        var table = $('<table>')
+            .addClass("table")
+            .addClass("table-bordered");
+        var th0 = $('<tr>')
+            .append($('<th>').text("A群").attr("colspan", "2"))
+            .append($('<th>').text("B群").attr("colspan", "4"))
+            .append($('<th>').text("C群").attr("colspan", "3"))
+            .append($('<th>').text("D").addClass("kk-D").attr("rowspan", "2"))
+            .append($('<th>').text("他").attr("rowspan", "2"))
+            .append($('<th>').text("計").attr("rowspan", "2"));
+        var th1 = $('<tr>')
+            .append($('<th>').text("A1").addClass("kk-A1"))
+            .append($('<th>').text("A2").addClass("kk-A2"))
+            .append($('<th>').text("B1").addClass("kk-B1"))
+            .append($('<th>').text("B2").addClass("kk-B2"))
+            .append($('<th>').text("B3").addClass("kk-B3"))
+            .append($('<th>').text("B4").addClass("kk-B4"))
+            .append($('<th>').text("必修").addClass("kk-C1"))
+            .append($('<th>').text("選択必修").addClass("kk-C2"))
+            .append($('<th>').text("選択").addClass("kk-C3"));
+        table.append($('<thead>').append(th0).append(th1));
+        var tbody = $('<tbody>');
+        var td = $('<tr>')
+            .append($('<td>').text(stat["A1"]))
+            .append($('<td>').text(stat["A2"]))
+            .append($('<td>').text(stat["B1"]))
+            .append($('<td>').text(stat["B2"]))
+            .append($('<td>').text(stat["B3"]))
+            .append($('<td>').text(stat["B4"]))
+            .append($('<td>').text(stat["C1"]))
+            .append($('<td>').text(stat["C2"]))
+            .append($('<td>').text(stat["C3"]))
+            .append($('<td>').text(stat["D"]))
+            .append($('<td>').text(stat["unknown"]))
+            .append($('<td>').text(stat["sum"]));
+        tbody.append(td);
+        table.append(tbody);
+        console.log(stat);
+        //
+        this.statTableAreaSel.empty().append(table);
+    };
+    WTT.prototype.termChanged = function (selector) {
+        this.currentTerm = selector.value;
+        this.refreshTimeTable();
+        this.updateStatistics();
+    };
+    WTT.prototype.yearChanged = function (selector) {
+        this.currentYear = selector.value;
+        this.refreshTimeTable();
+        this.updateStatistics();
+    };
+    WTT.prototype.refreshTimeTable = function () {
+        for (var d = 1; d < 7; d++) {
+            for (var p = 1; p < 7; p++) {
+                this.timeTableCells[d][p].empty();
+                this.timeTableCells[d][p].classCode = null;
+                this.timeTableCells[d][p].removeClass();
             }
         }
-    }
-}
-function isInCurrentTerm(c) {
-    return c[3].indexOf('通') != -1 ||
-        (currentTerm == 0 && c[3].indexOf('春') != -1) ||
-        (currentTerm == 1 && c[3].indexOf('秋') != -1);
-}
-onload = function () {
-    currentFocusLabelSel = $("#currentFocusLabel");
-    candidateClassResultAreaSel = $("#candidateClassResultArea");
-    timeTableSel = $("#timeTable");
-    statTableAreaSel = $("#statTableArea");
-    //
-    var rowList = timeTableSel[0].children[1].children;
-    for (var p = 0; p < rowList.length; p++) {
-        var days = rowList[p].children;
-        for (var d = 1; d < days.length; d++) {
-            var t = days[d];
-            timeTableCells[d][p + 1] = $(t);
+        for (var i = 0; i < this.takingClassCodeList.length; i++) {
+            var code = this.takingClassCodeList[i];
+            var c = this.db.getClassInfoForClassID(code);
+            if (!c) {
+                console.log("Invalid classcode:" + code);
+                return;
+            }
+            if (!this.isInCurrentTerm(c, code)) {
+                continue;
+            }
+            var pList = c[0];
+            for (var p = 0; p < pList.length; p++) {
+                this.timeTableCells[pList[p][0]][pList[p][1]].empty()
+                    .append($('<a>').text(c[4]).attr("href", c[6]).attr("target", "_blank"))
+                    .append($('<small>').text("(" + c[2] + "単位)"))
+                    .append($('<div>').append($('<small>').text(c[8]) /*.attr("class", "pull-right")*/));
+                if (this.timeTableCells[pList[p][0]][pList[p][1]].classCode) {
+                    window.alert(this.youbiList[pList[p][0]] + "曜" + pList[p][1] + "限に重複している授業があります。");
+                    console.log("duplicate class at (" + pList[p][0] + "," + pList[p][1] + ")");
+                }
+                this.timeTableCells[pList[p][0]][pList[p][1]].classCode = code;
+                if (this.kamokuKubunList[c[5]]) {
+                    this.timeTableCells[pList[p][0]][pList[p][1]].addClass("kk-" + this.kamokuKubunList[c[5]]);
+                }
+            }
         }
-    }
-    //
-    if (localStorage["defaultTable"]) {
-        takingClassCodeList = JSON.parse(localStorage["defaultTable"]);
-    }
-    else {
-        takingClassCodeList = new Array();
-    }
-    refreshTimeTable();
-    updateStatistics();
-};
+    };
+    WTT.prototype.isInCurrentTerm = function (c, id) {
+        return (c[3].indexOf('通') != -1 ||
+            (this.currentTerm == 0 && c[3].indexOf('春') != -1) ||
+            (this.currentTerm == 1 && c[3].indexOf('秋') != -1)) &&
+            this.db.isClassIDOfYear(id, this.currentYear);
+    };
+    return WTT;
+}());
+$(function () {
+    new WTT();
+});
 ;
 Array.prototype.removeAllObject = function (anObject) {
     //Array中にある全てのanObjectを削除し、空いた部分は前につめる。
