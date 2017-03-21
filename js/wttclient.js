@@ -149,12 +149,8 @@ var WTT = (function () {
             }
         }
         // Restore Data
-        if (localStorage["defaultTable"]) {
-            this.takingClassCodeList = JSON.parse(localStorage["defaultTable"]);
-        }
-        else {
-            this.takingClassCodeList = new Array();
-        }
+        this.load();
+        //
         this.refreshTimeTable();
         this.updateStatistics();
         $('#erasePeriodButton').on("click", function () {
@@ -167,6 +163,22 @@ var WTT = (function () {
             that.yearChanged(this);
         });
     }
+    WTT.prototype.save = function () {
+        var d = {
+            takingClassCodeList: this.takingClassCodeList
+        };
+        localStorage["default"] = JSON.stringify(d);
+    };
+    WTT.prototype.load = function () {
+        if (localStorage["default"]) {
+            var d = JSON.parse(localStorage["default"]);
+            if (d.takingClassCodeList instanceof Array) {
+                this.takingClassCodeList = d.takingClassCodeList;
+                return;
+            }
+        }
+        this.takingClassCodeList = new Array();
+    };
     WTT.prototype.moveTTFocus = function (d, p) {
         this.focusDay = d;
         this.focusPeriod = p;
@@ -240,13 +252,13 @@ var WTT = (function () {
             console.log("Invalid code " + code);
         }
         this.takingClassCodeList.removeAnObject(code);
-        localStorage["defaultTable"] = JSON.stringify(this.takingClassCodeList);
+        this.save();
         this.refreshTimeTable();
         this.updateStatistics();
     };
     WTT.prototype.takeClass = function (code) {
         this.takingClassCodeList.pushUnique(code);
-        localStorage["defaultTable"] = JSON.stringify(this.takingClassCodeList);
+        this.save();
         this.refreshTimeTable();
         this.updateStatistics();
     };

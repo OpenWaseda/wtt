@@ -158,11 +158,8 @@ class WTT {
 			}
 		}
 		// Restore Data
-		if(localStorage["defaultTable"]){
-			this.takingClassCodeList = JSON.parse(localStorage["defaultTable"]);
-		} else{
-			this.takingClassCodeList = new Array();
-		}
+		this.load();
+		//
 		this.refreshTimeTable();
 		this.updateStatistics();
 		$('#erasePeriodButton').on("click", function(){
@@ -174,6 +171,22 @@ class WTT {
 		$('#yearSelector').on("change", function(){
 			that.yearChanged(this);
 		})
+	}
+	save(){
+		var d = {
+			takingClassCodeList: this.takingClassCodeList
+		}
+		localStorage["default"] = JSON.stringify(d);
+	}
+	load(){
+		if(localStorage["default"]){
+			var d = JSON.parse(localStorage["default"]);
+			if(d.takingClassCodeList instanceof Array){
+				this.takingClassCodeList = d.takingClassCodeList;
+				return;
+			}
+		}
+		this.takingClassCodeList = new Array();
 	}
 	moveTTFocus(d, p){
 		this.focusDay = d;
@@ -248,13 +261,13 @@ class WTT {
 			console.log("Invalid code " + code);
 		}
 		this.takingClassCodeList.removeAnObject(code);
-		localStorage["defaultTable"] = JSON.stringify(this.takingClassCodeList);
+		this.save();
 		this.refreshTimeTable();
 		this.updateStatistics();
 	}
 	takeClass(code){
 		this.takingClassCodeList.pushUnique(code);
-		localStorage["defaultTable"] = JSON.stringify(this.takingClassCodeList);
+		this.save();
 		this.refreshTimeTable();
 		this.updateStatistics();
 	}
