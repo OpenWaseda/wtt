@@ -1,5 +1,6 @@
 var request = require('request');
 var fs = require('fs');
+var path = require('path');
 
 function findData(m0, mp, me, env){
 	var s, t;
@@ -12,12 +13,13 @@ function findData(m0, mp, me, env){
 }
 
 var opt = {
-	uri: 'https://www.wsl.waseda.jp/syllabus/JAA101.php',
+	uri: 'https://www.wsl.waseda.jp/syllabus/JAA102.php',
 	form: {
+		"nendo": "2015",
 		"p_number": "50",
 		"p_page": "1",
-		"p_gakubu": "28",
-		"pClsOpnSts": "123",
+		"p_gakubu": "26",
+		//"pClsOpnSts": "123",
 		"ControllerParameters": "JAA103SubCon",
 		"pLng": "jp",
 	},
@@ -29,55 +31,72 @@ var opt = {
               year            gakubu
 */
 
-/*
-772 <option label="政経" value="111973">政経</option>
-773 <option label="法学" value="121973">法学</option>
-774 <option label="一文" value="132002">一文</option>
-775 <option label="二文" value="142002">二文</option>
-776 <option label="教育" value="151949">教育</option>
-777 <option label="商学" value="161973">商学</option>
-778 <option label="理工" value="171968">理工</option>
-779 <option label="社学" value="181966">社学</option>
-780 <option label="人科" value="192000">人科</option>
-781 <option label="スポーツ" value="202003">スポーツ</option>
-782 <option label="国際教養" value="212004">国際教養</option>
-783 <option label="文構" value="232006">文構</option>
-784 <option label="文" value="242006">文</option>
-785 <option label="人通" value="252003">人通</option>
-786 <option label="基幹" value="262006">基幹</option>
-787 <option label="創造" value="272006">創造</option>
-788 <option label="先進" value="282006">先進</option>
-789 <option label="政研" value="311951">政研</option>
-790 <option label="経研" value="321951">経研</option>
-791 <option label="法研" value="331951">法研</option>
-792 <option label="文研" value="342002">文研</option>
-793 <option label="商研" value="351951">商研</option>
-794 <option label="教研" value="371990">教研</option>
-795 <option label="人研" value="381991">人研</option>
-796 <option label="社学研" value="391994">社学研</option>
-797 <option label="アジア研" value="402003">アジア研</option>
-798 <option label="国情研" value="422000">国情研</option>
-799 <option label="日研" value="432001">日研</option>
-800 <option label="情シス研" value="442003">情シス研</option>
-801 <option label="公共研" value="452003">公共研</option>
-802 <option label="ファイナンス研" value="462004">ファイナンス研</option>
-803 <option label="法務研" value="472004">法務研</option>
-804 <option label="会計研" value="482005">会計研</option>
-805 <option label="スポーツ研" value="502005">スポーツ研</option>
-806 <option label="基幹研" value="512006">基幹研</option>
-807 <option label="創造研" value="522006">創造研</option>
-808 <option label="先進研" value="532006">先進研</option>
-809 <option label="環エネ研" value="542006">環エネ研</option>
-810 <option label="教職研" value="552007">教職研</option>
-811 <option label="国際コミ研" value="562012">国際コミ研</option>
-812 <option label="経管研" value="572015">経管研</option>
-813 <option label="芸術" value="712001">芸術</option>
-814 <option label="日本語" value="922006">日本語</option>
-815 <option label="留学" value="982007">留学</option>
-816 <option label="グローバル" value="9S2013">グローバル</option>
-*/
+gakubuIDList = {};
+
+gakubuIDList["11"] = "政経";
+gakubuIDList["12"] = "法学";
+gakubuIDList["13"] = "一文";
+gakubuIDList["14"] = "二文";
+gakubuIDList["15"] = "教育";
+gakubuIDList["16"] = "商学";
+gakubuIDList["17"] = "理工";
+gakubuIDList["18"] = "社学";
+gakubuIDList["19"] = "人科";
+gakubuIDList["20"] = "スポーツ";
+gakubuIDList["21"] = "国際教養";
+gakubuIDList["23"] = "文構";
+gakubuIDList["24"] = "文";
+gakubuIDList["25"] = "人通";
+gakubuIDList["26"] = "基幹";
+gakubuIDList["27"] = "創造";
+gakubuIDList["28"] = "先進";
+gakubuIDList["31"] = "政研";
+gakubuIDList["32"] = "経研";
+gakubuIDList["33"] = "法研";
+gakubuIDList["34"] = "文研";
+gakubuIDList["35"] = "商研";
+gakubuIDList["37"] = "教研";
+gakubuIDList["38"] = "人研";
+gakubuIDList["39"] = "社学研";
+gakubuIDList["40"] = "アジア研";
+gakubuIDList["42"] = "国情研";
+gakubuIDList["43"] = "日研";
+gakubuIDList["44"] = "情シス研";
+gakubuIDList["45"] = "公共研";
+gakubuIDList["46"] = "ファイナンス研";
+gakubuIDList["47"] = "法務研";
+gakubuIDList["48"] = "会計研";
+gakubuIDList["50"] = "スポーツ研";
+gakubuIDList["51"] = "基幹研";
+gakubuIDList["52"] = "創造研";
+gakubuIDList["53"] = "先進研";
+gakubuIDList["54"] = "環エネ研";
+gakubuIDList["55"] = "教職研";
+gakubuIDList["56"] = "国際コミ研";
+gakubuIDList["57"] = "経管研";
+gakubuIDList["71"] = "芸術";
+gakubuIDList["92"] = "日本語";
+gakubuIDList["98"] = "留学";
+gakubuIDList["9S"] = "グローバル";
 
 var idList = new Array();
+
+if(process.argv.length < 4){
+	console.log("Usage: " + 
+		path.basename(process.argv[1]) + " [year] [gakubuID]");
+	return;
+}
+
+opt.form["nendo"] = process.argv[2];
+opt.form["p_gakubu"] = process.argv[3];
+
+if(!gakubuIDList[opt.form["p_gakubu"]]){
+	console.log("Invalid GakubuID");
+	return;
+}
+
+console.log(opt.form["nendo"] + "年度 " + 
+	gakubuIDList[opt.form["p_gakubu"]]);
 
 function getPage(page){
 	opt.form["p_page"] = "" + page;
@@ -94,9 +113,9 @@ function getPage(page){
 			if(env.text.indexOf("ch-message") != -1){
 				console.log("Out of Pages.");
 				console.log(JSON.stringify(idList, "", "    "));
-				fs.writeFile('id_' +
+				fs.writeFile('store/' +
 					idList[0].substr(12, 4) + '_' + 
-					idList[0].substr(-2) + ".json", 
+					idList[0].substr(-2) + "_id.json", 
 					JSON.stringify(idList, "", "  "));
 				return;
 			}
