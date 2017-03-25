@@ -22,6 +22,8 @@ class WTTDatabase {
 				return function(data){
 					that2.periodTable[key] = data;
 					that2.wtt.refreshTimeTable();
+					that2.wtt.updateStatistics();
+					//console.log("table " + key + " loaded");
 				}
 			}();
 			var f_data = function(){
@@ -30,12 +32,14 @@ class WTTDatabase {
 				return function(data){
 					that2.classList[key] = data;
 					that2.wtt.refreshTimeTable();
+					that2.wtt.updateStatistics();
+					//console.log("data " + key + " loaded");
 				}
 			}();
 			$.getJSON("data/store/" + this.availableList[i] + "_conv_table.json", f_table);
 			$.getJSON("data/store/" + this.availableList[i] + "_conv_data.json", f_data);
-			console.log(this);
 		}
+		console.log(this);
 	}
 	getClassIDListForPeriod(year: number, gakubu: number, day: number, period: number){
 		try{
