@@ -22,7 +22,7 @@ var WTTDatabase = (function () {
                     that2.periodTable[key] = data;
                     that2.wtt.refreshTimeTable();
                     that2.wtt.updateStatistics();
-                    console.log("table " + key + " loaded");
+                    //console.log("table " + key + " loaded");
                 };
             }();
             var f_data = function () {
@@ -32,7 +32,7 @@ var WTTDatabase = (function () {
                     that2.classList[key] = data;
                     that2.wtt.refreshTimeTable();
                     that2.wtt.updateStatistics();
-                    console.log("data " + key + " loaded");
+                    //console.log("data " + key + " loaded");
                 };
             }();
             $.getJSON("data/store/" + this.availableList[i] + "_conv_table.json", f_table);
@@ -95,16 +95,6 @@ var WTT = (function () {
             '情報関連科目　必修': 'B4'
         };
         var that = this;
-        /*
-        $.getJSON("data/store/2017_26_conv_table.json" , function(data) {
-            that.periodTable = data;
-            that.refreshTimeTable();
-        });
-        $.getJSON("data/store/2017_26_conv_data.json" , function(data) {
-            that.classList = data;
-            that.refreshTimeTable();
-        });
-         */
         this.db = new WTTDatabase(this);
         // Generate time table cells
         var ttArea = $("#timeTableArea");
@@ -168,20 +158,37 @@ var WTT = (function () {
         });
     }
     WTT.prototype.save = function () {
-        var d = {
-            takingClassCodeList: this.takingClassCodeList
-        };
-        localStorage["default"] = JSON.stringify(d);
+        localStorage["default"] = this.getDataJSON();
     };
-    WTT.prototype.load = function () {
-        if (localStorage["default"]) {
-            var d = JSON.parse(localStorage["default"]);
+    WTT.prototype.load = function (jsonStr) {
+        if (jsonStr === undefined) {
+            jsonStr = localStorage["default"];
+        }
+        if (jsonStr) {
+            var d;
+            try {
+                d = JSON.parse(jsonStr);
+            }
+            catch (e) {
+                window.alert("JSON parse failed! " + e);
+                return;
+            }
             if (d.takingClassCodeList instanceof Array) {
                 this.takingClassCodeList = d.takingClassCodeList;
+                this.save();
                 return;
+            }
+            else {
+                window.alert("Invalid format");
             }
         }
         this.takingClassCodeList = new Array();
+    };
+    WTT.prototype.getDataJSON = function () {
+        var d = {
+            takingClassCodeList: this.takingClassCodeList
+        };
+        return JSON.stringify(d, null, " ");
     };
     WTT.prototype.moveTTFocus = function (d, p) {
         this.focusDay = d;
@@ -391,7 +398,34 @@ var WTT = (function () {
     return WTT;
 }());
 $(function () {
-    new WTT();
+    var wtt = new WTT();
+    var downloadButtonDOM = document.getElementById("downloadButton");
+    downloadButtonDOM.onclick = function () {
+        var dataStr = "data:text/json;charset=utf-8," +
+            encodeURIComponent(wtt.getDataJSON());
+        downloadButtonDOM.setAttribute("href", dataStr);
+        downloadButtonDOM.setAttribute("download", "wtt_" + Date.now() + ".json");
+        return true;
+    };
+    var fileDOM = document.getElementById("uploadFile");
+    var loadFileButtonDOM = document.getElementById("loadFileButton");
+    loadFileButtonDOM.onclick = function () {
+        var file = fileDOM.files[0];
+        if (!file) {
+            window.alert("ファイルが選択されていません！");
+        }
+        else {
+            var reader = new FileReader();
+            reader.onload = function (e) {
+                var contents = reader.result;
+                wtt.load(contents);
+                wtt.updateStatistics();
+                wtt.refreshTimeTable();
+            };
+            reader.readAsText(file);
+        }
+        return true;
+    };
 });
 ;
 Array.prototype.removeAllObject = function (anObject) {

@@ -41,7 +41,15 @@
 				<option value="1">秋学期・通年</option>
 			</select>
 		</span>
-		<button id="erasePeriodButton"><span class="glyphicon glyphicon-erase"></span></button>
+		<a class="btn btn-sm btn-danger" id="erasePeriodButton">
+			erase class <span class="glyphicon glyphicon-erase"></span>
+		</a>
+		<a class="btn btn-sm btn-primary" id="downloadButton">
+			download <span class="glyphicon glyphicon-download-alt"></span>
+		</a>
+		<button type="button" class="btn btn-sm btn-success" data-toggle="modal" data-target="#uploadModal">
+			open <span class="glyphicon glyphicon-folder-open"></span>
+		</button>
 		<div id="timeTableArea"></div>
 		<div id="statTableArea"></div>
 		<h2>選択可能な授業</h2>
@@ -54,6 +62,26 @@
 	<div id="footerDiv">
 		<hr>
 		<p><a href="https://github.com/OpenWaseda">The OpenWaseda Project</a></p>
+	</div>
+	<!-- Modal -->
+	<div class="modal fade" id="uploadModal" tabindex="-1" role="dialog" aria-labelledby="upload modal" aria-hidden="true">
+		<div class="modal-dialog" role="document">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h5 class="modal-title" id="exampleModalLabel">時間割ファイルを選択してください</h5>
+					<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+						<span aria-hidden="true">&times;</span>
+					</button>
+				</div>
+				<div class="modal-body">
+					<input id="uploadFile" type="file"></input>
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-secondary" data-dismiss="modal">キャンセル</button>
+					<button id="loadFileButton" type="button" class="btn btn-primary" data-dismiss="modal">読み込む</button>
+				</div>
+			</div>
+		</div>
 	</div>
 </body>
 </html>
