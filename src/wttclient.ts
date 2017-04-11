@@ -3,9 +3,34 @@ class JQuery {
 	tablesorter: any;
 }
 
+class WTTClassData {
+	pKey: string;
+	periodList: (number[])[];
+	eligibleYear: number;
+	credits: number;
+	term: string;
+	title: string;
+	category: string;
+	url: string;
+	instructor: string;
+	classroom: string;
+	constructor(key: string, row: any[]){
+		this.pKey = key;
+		this.periodList = row[0];
+		this.eligibleYear = row[1];
+		this.credits = row[2];
+		this.term = row[3];
+		this.title = row[4];
+		this.category = row[5];
+		this.url = row[6];
+		this.instructor = row[7];
+		this.classroom = row[8];
+	}
+}
+
 class WTTDatabase {
 	periodTable = {};
-	classList = {};
+	classList: (WTTClassData[])[] = [];
 	availableList = [
 		"2015_26",
 		"2016_26",
@@ -19,7 +44,7 @@ class WTTDatabase {
 			var f_table = function(){
 				var that2 = that;
 				var key = that.availableList[i];
-				return function(data){
+				return function(data: any[]){
 					that2.periodTable[key] = data;
 					that2.wtt.refreshTimeTable();
 					that2.wtt.updateStatistics();
@@ -28,12 +53,15 @@ class WTTDatabase {
 			}();
 			var f_data = function(){
 				var that2 = that;
-				var key = that.availableList[i];
+				var index = that.availableList[i];
 				return function(data){
-					that2.classList[key] = data;
+					var classSubList: WTTClassData[] = [];
+					for(var pKey in data){
+						classSubList[pKey] = new WTTClassData(pKey, data[pKey]);
+					}
+					that2.classList[index] = classSubList;
 					that2.wtt.refreshTimeTable();
 					that2.wtt.updateStatistics();
-					//console.log("data " + key + " loaded");
 				}
 			}();
 			$.getJSON("data/store/" + this.availableList[i] + "_conv_table.json", f_table);
@@ -41,14 +69,16 @@ class WTTDatabase {
 		}
 		console.log(this);
 	}
-	getClassIDListForPeriod(year: number, gakubu: number, day: number, period: number){
+	getClassIDListForPeriod(year: number, gakubu: number, day: number, period: number): string[]
+	{
 		try{
 			return this.periodTable["" + year + "_" + gakubu][day][period];
 		} catch(e){
 			return [];
 		}
 	}
-	getClassInfoForClassID(id: string){
+	getClassInfoForClassID(id: string): WTTClassData
+	{
 		try{
 			return this.classList[id.substr(12, 4) + "_" + id.substr(-2)][id];
 		} catch(e){
@@ -100,6 +130,14 @@ class WTT {
 		'自然科学　生命科学　必修':	'B2',
 		'情報関連科目　必修':		'B4',
 	};
+	classTimeList = [
+		'09:00-10:30',
+		'10:40-12:10',
+		'13:00-14:30',
+		'14:45-16:15',
+		'16:30-18:00',
+		'18:15-19:45',
+	];
 	db: WTTDatabase;
 	constructor(){
 		var that = this;
@@ -120,7 +158,7 @@ class WTT {
 		var tbody = $('<tbody>');
 		for(var i = 1; i <= 6; i++){
 			var tr = $('<tr>');
-			tr.append($('<th>').text(i));
+			tr.append($('<th>').html(i + "<br><small>" + this.classTimeList[i - 1]+ "</small>"));
 			for(var k = 1; k < this.youbiList.length; k++){
 				var f = function(){
 					var that2 = that;
@@ -239,7 +277,7 @@ class WTT {
 		}
 		for(var i = 0; i < classIDList.length; i++){
 			var code = classIDList[i];
-			var c = this.db.getClassInfoForClassID(code);
+			var c: WTTClassData = this.db.getClassInfoForClassID(code);
 			if(!this.isInCurrentTerm(c, code)){
 				continue;
 			}
@@ -249,11 +287,13 @@ class WTT {
 				return function(){ that2.moveCLFocus(this, classID); };
 			}();
 			var td = $('<tr>')
-				.append($('<td>').text(c[1]))
-				.append($('<td>').text(c[3]))
-				.append($('<td>').append($('<a>').text(c[4]).attr("href", c[6]).attr("target", "_blank")))
-				.append($('<td>').text(c[5]).addClass("kk-" + this.kamokuKubunList[c[5]]))
-				.append($('<td>').text(c[2]))
+				.append($('<td>').text(c.eligibleYear))
+				.append($('<td>').text(c.term))
+				.append($('<td>').append($('<a>').text(c.title)
+					.attr("href", c.url).attr("target", "_blank")))
+				.append($('<td>').text(c.category)
+					.addClass("kk-" + this.kamokuKubunList[c.category]))
+				.append($('<td>').text(c.credits))
 				.on("click", f);
 			tbody.append(td);
 		}
@@ -299,12 +339,12 @@ class WTT {
 			if(!c){
 				continue;
 			}
-			if(this.kamokuKubunList[c[5]]){
-				stat[this.kamokuKubunList[c[5]]] += c[2];
+			if(this.kamokuKubunList[c.category]){
+				stat[this.kamokuKubunList[c.category]] += c.credits;
 			} else{
-				stat["unknown"] += c[2];	
+				stat["unknown"] += c.credits;	
 			}
-			stat["sum"] += c[2];
+			stat["sum"] += c.credits;
 		}
 		
 		//
@@ -381,19 +421,22 @@ class WTT {
 			if(!this.isInCurrentTerm(c, code)){
 				continue;
 			}
-			var pList = c[0];
+			var pList = c.periodList;
 			for(var p = 0; p < pList.length; p++){
 				this.timeTableCells[pList[p][0]][pList[p][1]].empty()
-					.append($('<a>').text(c[4]).attr("href", c[6]).attr("target", "_blank"))
-					.append($('<small>').text("(" + c[2] + "単位)"))
-					.append($('<div>').append($('<small>').text(c[8])/*.attr("class", "pull-right")*/));
+					.append($('<a>').text(c.title).attr("href", c.url)
+						.attr("target", "_blank"))
+					.append($('<small>').text("(" + c.credits + "単位)"))
+					.append($('<div>').append($('<small>')
+						.text(c.classroom)/*.attr("class", "pull-right")*/));
 				if(this.timeTableCells[pList[p][0]][pList[p][1]].classCode){
 					window.alert(this.youbiList[pList[p][0]] + "曜" + pList[p][1] + "限に重複している授業があります。");
 					console.log("duplicate class at (" + pList[p][0] + "," + pList[p][1] + ")");
 				}
 				this.timeTableCells[pList[p][0]][pList[p][1]].classCode = code;
-				if(this.kamokuKubunList[c[5]]){
-					this.timeTableCells[pList[p][0]][pList[p][1]].addClass("kk-" + this.kamokuKubunList[c[5]]);
+				if(this.kamokuKubunList[c.category]){
+					this.timeTableCells[pList[p][0]][pList[p][1]]
+						.addClass("kk-" + this.kamokuKubunList[c.category]);
 				}
 			}
 			
@@ -401,9 +444,9 @@ class WTT {
 	}
 
 	isInCurrentTerm(c, id){
-		return (c[3].indexOf('通') != -1 ||
-			(this.currentTerm == 0 && c[3].indexOf('春') != -1) ||
-			(this.currentTerm == 1 && c[3].indexOf('秋') != -1)) &&
+		return (c.term.indexOf('通') != -1 ||
+			(this.currentTerm == 0 && c.term.indexOf('春') != -1) ||
+			(this.currentTerm == 1 && c.term.indexOf('秋') != -1)) &&
 			this.db.isClassIDOfYear(id, this.currentYear);
 	}
 }

@@ -17,7 +17,7 @@ var opt = {
 	uri: '',
 };
 
-var year = 2015;
+var year = 2017;
 var gakubuID = "26";
 
 /*
