@@ -14,6 +14,7 @@ class WTTClassData {
 	url: string;
 	instructor: string;
 	classroom: string;
+	year: number;
 	constructor(key: string, row: any[]){
 		this.pKey = key;
 		this.periodList = row[0];
@@ -25,6 +26,7 @@ class WTTClassData {
 		this.url = row[6];
 		this.instructor = row[7];
 		this.classroom = row[8];
+		this.year = parseInt(key.substr(12, 4), 10);
 	}
 }
 
@@ -96,10 +98,12 @@ class WTT {
 	candidateClassResultAreaSel: JQuery;
 	timeTableSel: JQuery;
 	statTableAreaSel: JQuery;
+	creditsTableAreaSel: JQuery;
+	takingClassTableAreaSel: JQuery;
 	timeTableCells = [];
 	takingClassCodeList = [];
 	currentTerm = 0;	// 0: 春学期 1: 秋学期
-	currentYear = 2017;
+	currentYear;
 	currentGakubu = 26;
 	focusDay = -1;
 	focusPeriod = -1;
@@ -177,6 +181,8 @@ class WTT {
 		this.candidateClassResultAreaSel = $("#candidateClassResultArea");
 		this.timeTableSel = $("#timeTable");
 		this.statTableAreaSel = $("#statTableArea");
+		this.creditsTableAreaSel = $("#creditsTableArea");
+		this.takingClassTableAreaSel = $("#takingClassTableArea");
 		//
 		var rowList = this.timeTableSel[0].children[1].children;
 		for(var p = 0; p < rowList.length; p++){
@@ -189,9 +195,8 @@ class WTT {
 		}
 		// Restore Data
 		this.load();
-		//
 		this.refreshTimeTable();
-		this.updateStatistics();
+		//
 		$('#erasePeriodButton').on("click", function(){
 			that.erasePeriod();
 		})
@@ -204,6 +209,10 @@ class WTT {
 	}
 	save(){
 		localStorage["default"] = this.getDataJSON();
+		this.refreshTimeTable();
+		this.updateStatistics();
+		this.updateCreditsTable();
+		this.showTakingClassTable();
 	}
 	load(jsonStr?: string){
 		if(jsonStr === undefined){
@@ -309,14 +318,10 @@ class WTT {
 		}
 		this.takingClassCodeList.removeAnObject(code);
 		this.save();
-		this.refreshTimeTable();
-		this.updateStatistics();
 	}
 	takeClass(code){
 		this.takingClassCodeList.pushUnique(code);
 		this.save();
-		this.refreshTimeTable();
-		this.updateStatistics();
 	}
 	updateStatistics(){
 		var stat = {
@@ -391,6 +396,117 @@ class WTT {
 		//
 		this.statTableAreaSel.empty().append(table);
 	}
+	updateCreditsTable(){
+		var stat = {
+			"A1":0,
+			"A2":0,
+			"B1":0,
+			"B2":0,
+			"B3":0,
+			"B4":0,
+			"C1":0,
+			"C2":0,
+			"C3":0,
+			"D":0,
+			"unknown":0,
+			"sum":0
+		};
+		for(var i = 0; i < this.takingClassCodeList.length; i++){
+			var code = this.takingClassCodeList[i];
+			var c = this.db.getClassInfoForClassID(code);
+			if(!c){
+				continue;
+			}
+			if(this.kamokuKubunList[c.category]){
+				stat[this.kamokuKubunList[c.category]] += c.credits;
+			} else{
+				stat["unknown"] += c.credits;	
+			}
+			stat["sum"] += c.credits;
+		}
+		
+		//
+		var table = $('<table>')
+			.addClass("table")
+			.addClass("table-bordered");
+		var th0 = $('<tr>')
+			.append($('<th>').text("分類").attr("rowspan", "2"))
+			.append($('<th>').text("A群").attr("colspan", "2"))
+			.append($('<th>').text("B群").attr("colspan", "4"))
+			.append($('<th>').text("C群").attr("colspan", "3"))
+			.append($('<th>').text("D").addClass("kk-D").attr("rowspan", "2"))
+			.append($('<th>').text("他").attr("rowspan", "2"))
+			.append($('<th>').text("計").attr("rowspan", "2"));
+		var th1 = $('<tr>')
+			.append($('<th>').text("A1").addClass("kk-A1"))
+			.append($('<th>').text("A2").addClass("kk-A2"))
+			.append($('<th>').text("B1").addClass("kk-B1"))
+			.append($('<th>').text("B2").addClass("kk-B2"))
+			.append($('<th>').text("B3").addClass("kk-B3"))
+			.append($('<th>').text("B4").addClass("kk-B4"))
+			.append($('<th>').text("必修").addClass("kk-C1"))
+			.append($('<th>').text("選択必修").addClass("kk-C2"))
+			.append($('<th>').text("選択").addClass("kk-C3"));
+		table.append($('<thead>').append(th0).append(th1));
+		var tbody = $('<tbody>');
+		var td = $('<tr>')
+			.append($('<td>').text("合計"))
+			.append($('<td>').text(stat["A1"]))
+			.append($('<td>').text(stat["A2"]))
+			.append($('<td>').text(stat["B1"]))
+			.append($('<td>').text(stat["B2"]))
+			.append($('<td>').text(stat["B3"]))
+			.append($('<td>').text(stat["B4"]))
+			.append($('<td>').text(stat["C1"]))
+			.append($('<td>').text(stat["C2"]))
+			.append($('<td>').text(stat["C3"]))
+			.append($('<td>').text(stat["D"]))
+			.append($('<td>').text(stat["unknown"]))
+			.append($('<td>').text(stat["sum"]));
+		tbody.append(td);
+		table.append(tbody);
+		console.log(stat);
+		//
+		this.creditsTableAreaSel.empty().append(table);
+	}
+	showTakingClassTable(){
+		var that = this;
+		var table = $('<table>')
+			.addClass("tablesorter")
+			.addClass("table")
+			.addClass("table-bordered");
+		var th = $('<tr>')
+			.append($('<th>').text("年度").css("width", "10%"))
+			.append($('<th>').text("学期").css("width", "10%"))
+			.append($('<th>').text("授業名"))
+			.append($('<th>').text("科目群").css("width", "20%"))
+			.append($('<th>').text("単位数").css("width", "10%"));
+		table.append($('<thead>').append(th));
+		var tbody = $('<tbody>');
+		var classIDList = this.takingClassCodeList;
+		if(!classIDList){
+			return;
+		}
+		console.log(classIDList);
+		for(var i = 0; i < classIDList.length; i++){
+			var code = classIDList[i];
+			var c: WTTClassData = this.db.getClassInfoForClassID(code);
+			if(!c) continue;
+			var td = $('<tr>')
+				.append($('<td>').text(c.year))
+				.append($('<td>').text(c.term))
+				.append($('<td>').append($('<a>').text(c.title)
+					.attr("href", c.url).attr("target", "_blank")))
+				.append($('<td>').text(c.category)
+					.addClass("kk-" + this.kamokuKubunList[c.category]))
+				.append($('<td>').text(c.credits))
+			tbody.append(td);
+		}
+		table.append(tbody);
+		//
+		this.takingClassTableAreaSel.empty().append(table);
+		table.tablesorter(); 
+	} 
 
 	termChanged(selector){
 		this.currentTerm = selector.value;
@@ -480,6 +596,11 @@ $(function() {
 			reader.readAsText(file);
 		}
 		return true;
+	}
+	var creditsButtonDOM = document.getElementById("pills-credits-tab");
+	creditsButtonDOM.onclick = function(){
+		wtt.updateCreditsTable();
+		wtt.showTakingClassTable();
 	}
 	//
 	var date = new Date();
