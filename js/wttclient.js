@@ -434,6 +434,7 @@ $(function () {
     var wtt = new WTT();
     var downloadButtonDOM = document.getElementById("downloadButton");
     downloadButtonDOM.onclick = function () {
+        console.log("Download!!!");
         var dataStr = "data:text/json;charset=utf-8," +
             encodeURIComponent(wtt.getDataJSON());
         downloadButtonDOM.setAttribute("href", dataStr);
