@@ -335,6 +335,7 @@ var WTT = (function () {
             .addClass("table")
             .addClass("table-bordered");
         var th0 = $('<tr>')
+            .append($('<th>').text("分類").attr("rowspan", "2"))
             .append($('<th>').text("A群").attr("colspan", "2"))
             .append($('<th>').text("B群").attr("colspan", "4"))
             .append($('<th>').text("C群").attr("colspan", "3"))
@@ -354,6 +355,7 @@ var WTT = (function () {
         table.append($('<thead>').append(th0).append(th1));
         var tbody = $('<tbody>');
         var td = $('<tr>')
+            .append($('<td>').text("合計"))
             .append($('<td>').text(stat["A1"]))
             .append($('<td>').text(stat["A2"]))
             .append($('<td>').text(stat["B1"]))
@@ -457,6 +459,13 @@ $(function () {
         }
         return true;
     };
+    //
+    var date = new Date();
+    var month = date.getMonth() + 1;
+    var term = (3 <= month && month <= 7) ? 0 : 1;
+    var year = date.getFullYear() - (month <= 3 ? 1 : 0);
+    $("#yearSelector").val(year).change();
+    $("#termSelector").val(term).change();
 });
 ;
 Array.prototype.removeAllObject = function (anObject) {
