@@ -312,9 +312,12 @@ class WTT {
 		table.tablesorter(); 
 	} 
 	erasePeriod(){
-		var code = this.focusElemSel.classCode;
+		this.eraseClass(this.focusElemSel.classCode);
+	}
+	eraseClass(code){
 		if(!code){
 			console.log("Invalid code " + code);
+			return;
 		}
 		this.takingClassCodeList.removeAnObject(code);
 		this.save();
@@ -550,6 +553,7 @@ class WTT {
 				if(this.timeTableCells[pList[p][0]][pList[p][1]].classCode){
 					window.alert(this.youbiList[pList[p][0]] + "曜" + pList[p][1] + "限に重複している授業があります。");
 					console.log("duplicate class at (" + pList[p][0] + "," + pList[p][1] + ")");
+					this.eraseClass(code);
 				}
 				this.timeTableCells[pList[p][0]][pList[p][1]].classCode = code;
 				if(this.kamokuKubunList[c.category]){
